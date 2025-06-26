@@ -1,4 +1,3 @@
-// db.js
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 
@@ -14,13 +13,23 @@ const client = new MongoClient(uri, {
 
 let db;
 
-async function connectToDB() {
-	if (!db) {
-		await client.connect();
-		db = client.db('plantium');
-		console.log('Connected to MongoDB');
-	}
-	return db;
+function connectToDB() {
+	return new Promise((resolve, reject) => {
+		if (db) {
+			return resolve(db);
+		}
+
+		client.connect()
+			.then(() => {
+				db = client.db('plantium');
+				console.log('Connected to MongoDB');
+				resolve(db);
+			})
+			.catch(err => {
+				console.error('MongoDB connection error:', err);
+				reject(err);
+			});
+	});
 }
 
 function getCollection(collectionName) {
