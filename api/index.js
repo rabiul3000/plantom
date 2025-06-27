@@ -13,8 +13,9 @@ app.use(
     origin: ["http://localhost:5173", "https://plantium-d465f.web.app"],
   })
 );
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
 app.use(morgan("dev"));
 
 app.get("/", (req, res) => {
@@ -24,6 +25,11 @@ app.get("/", (req, res) => {
 
 connectToDB()
   .then(() => {
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+      console.log(`http://localhost:${port}`);
+    });
+
     // POST /api/plant
     app.post("/api/plant", (req, res) => {
       const plant = req.body;
@@ -34,14 +40,40 @@ connectToDB()
         .catch((err) => res.status(500).json({ error: err.message }));
     });
 
+    app.get("/api/plant/:id", (req, res) => {
+      const id = req.params.id;
+      const plants = getCollection("plants");
+
+      try {
+        plants
+          .findOne({ _id: new ObjectId(id) })
+          .then((plant) => {
+            if (!plant) {
+              return res.status(404).json({ error: "Plant not found" });
+            }
+            res.status(200).json(plant);
+          })
+          .catch((err) => {
+            res.status(500).json({ error: err.message });
+          });
+      } catch (err) {
+        // In case ObjectId fails (invalid format)
+        res.status(400).json({ error: "Invalid plant ID" });
+      }
+    });
+
     // GET /api/plants
     app.get("/api/plants", (req, res) => {
       const plants = getCollection("plants");
       plants
         .find()
         .toArray()
-        .then((result) => res.status(200).json({ result }))
-        .catch((err) => res.status(500).json({ error: err.message }));
+        .then((result) => {
+          return res.status(200).json(result);
+        })
+        .catch((err) => {
+          return res.status(500).json({ error: err.message });
+        });
     });
 
     // GET /api/last_plants
@@ -93,8 +125,3 @@ connectToDB()
     console.error("Failed to connect to MongoDB:", err);
     process.exit(1); // Exit if DB connection fails
   });
-
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`http://localhost:${port}`);
-});
