@@ -6,7 +6,7 @@ This is the backend API server for the Plantium project — a plant management s
 
 You can try the frontend and test the live API at:
 
-[https://plantium-d465f.web.app/](https://plantium-d465f.web.app/)
+[https://plantor.vercel.app/](https://plantor.vercel.app/)
 
 ---
 
